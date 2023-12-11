@@ -1,3 +1,36 @@
+## Security Scanning Pipeline
+
+Our project is equipped with an automated security scanning pipeline that activates on pushes and pull requests to the master branch. This pipeline is integral in maintaining a secure codebase by proactively identifying and addressing security vulnerabilities.
+
+### Pipeline Overview
+
+The security scanning pipeline consists of the following key stages:
+
+1. **Setup Environment**: This stage prepares the environment for subsequent security scans by checking out the codebase and setting up the required Python version and dependencies.
+
+2. **SAST (Static Application Security Testing)**: Conducts static code analysis to identify potential security issues using tools like SonarCloud for comprehensive scanning and Bandit for Python-specific vulnerabilities.
+
+3. **Software Composition Analysis**: Examines third-party libraries and dependencies for known vulnerabilities using the Snyk CLI tool to ensure our code is secure from the ground up.
+
+4. **DAST (Dynamic Application Security Testing)**: After completing the SAST, we perform a dynamic scan of the application with OWASP ZAP to uncover runtime vulnerabilities.
+
+### Environment Variables
+
+Here is a table of the environment variables and secrets used in our security scanning pipeline:
+
+| Variable/Secret           | Description                                                      | Used By                |
+|---------------------------|------------------------------------------------------------------|------------------------|
+| `GITHUB_TOKEN`            | Automatically generated GitHub authentication token.             | SonarCloud, OWASP ZAP  |
+| `SONAR_TOKEN`             | Personal access token for SonarCloud to execute scans.           | SonarCloud Scan        |
+| `SNYK_TOKEN`              | Access token for the Snyk CLI to perform vulnerability checks.   | Snyk CLI               |
+| `TARGET_URL`              | The URL of the application to be dynamically tested.             | OWASP ZAP              |
+
+It's crucial that these secrets are set up in the GitHub repository settings to ensure that the pipeline operates correctly.
+
+> **Important**: Make sure to keep `SONAR_TOKEN`, `SNYK_TOKEN`, and `TARGET_URL` confidential and securely stored within your GitHub repository's secrets to prevent unauthorized use.
+
+==========================
+
 [![Build Status](https://travis-ci.org/frol/flask-restplus-server-example.svg)](https://travis-ci.org/frol/flask-restplus-server-example)
 [![Coverage Status](https://coveralls.io/repos/frol/flask-restplus-server-example/badge.svg?branch=master&service=github)](https://coveralls.io/github/frol/flask-restplus-server-example?branch=master)
 [![Codacy Coverage Status](https://api.codacy.com/project/badge/coverage/b0fc91ce77d3437ea5f107c4b7ccfa26)](https://www.codacy.com/app/frolvlad/flask-restplus-server-example)
