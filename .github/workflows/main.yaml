@@ -64,13 +64,6 @@ jobs:
           name: bandit-sast-report
           path: bandit-report.json
       
-      - name: Upload Snyk Report
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: snyk-sast-report
-          path: snyk-report.json
-
   dast:
     name: DAST Analysis
     needs: [setup, sast]
