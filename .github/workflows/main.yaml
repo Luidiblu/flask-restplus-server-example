@@ -1,0 +1,83 @@
+name: Security Scanning Pipeline
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  setup:
+    name: Setup Environment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
+      
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+  sast:
+    name: SAST Analysis
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: SonarCloud Scan
+        continue-on-error: true
+        uses: SonarSource/sonarcloud-github-action@v1.6
+        with:
+          args: >
+            -Dsonar.projectKey=Luidiblu_flask-restplus-server-example
+            -Dsonar.organization=luidiblu
+            -Dsonar.branch.name=${{ github.ref }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Run Bandit
+        run: |
+          pip install bandit
+          bandit -ll -ii -r . -f json -o bandit-report.json && echo bandit-report.json || echo "No issues found."
+      
+      - name: Install Snyk CLI
+        run: npm install -g snyk
+
+      - name: Run Snyk to check for vulnerabilities in dependencies
+        run: |
+          pip install -r requirements.txt
+          snyk test --all-projects
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+      - name: Upload Bandit Report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: bandit-sast-report
+          path: bandit-report.json
+      
+      - name: Upload Snyk Report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: snyk-sast-report
+          path: snyk-report.json
+
+  dast:
+    name: DAST Analysis
+    needs: [setup, sast]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run OWASP ZAP
+        uses: zaproxy/action-full-scan@v0.8.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          target: ${{ secrets.TARGET_URL }}
